@@ -1,0 +1,13 @@
+{
+    "servers": {
+        "argocd-mcp-server": {
+            "type": "stdio",
+            "command": "node",
+            "args": [
+                "${workspaceFolder}/dist/argocd-mcp-server.js",
+                "stdio"
+            ],
+            "envFile": "${workspaceFolder}/.env"
+        }
+    }
+}
