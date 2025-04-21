@@ -33,6 +33,7 @@ export class ArgoCDClient {
   public async createApplication(application: Application) {
     const { body } = await this.client.post<Application, Application>(
       `/api/v1/applications`,
+      null,
       application
     );
     return body;
@@ -41,6 +42,7 @@ export class ArgoCDClient {
   public async updateApplication(applicationName: string, application: Application) {
     const { body } = await this.client.put<Application, Application>(
       `/api/v1/applications/${applicationName}`,
+      null,
       application
     );
     return body;
@@ -76,8 +78,36 @@ export class ArgoCDClient {
 
   public async getApplicationLogs(applicationName: string) {
     const logs: LogEntry[] = [];
-    await this.client.getStream<LogEntry>(`/api/v1/applications/${applicationName}/logs`, (chunk) =>
-      logs.push(chunk)
+    await this.client.getStream<LogEntry>(
+      `/api/v1/applications/${applicationName}/logs`,
+      {
+        follow: false,
+        tailLines: 100
+      },
+      (chunk) => logs.push(chunk)
+    );
+    return logs;
+  }
+
+  public async getWorkloadLogs(
+    applicationName: string,
+    applicationNamespace: string,
+    resourceRef: ResourceRef
+  ) {
+    const logs: LogEntry[] = [];
+    await this.client.getStream<LogEntry>(
+      `/api/v1/applications/${applicationName}/logs`,
+      {
+        appNamespace: applicationNamespace,
+        namespace: resourceRef.namespace,
+        resourceName: resourceRef.name,
+        group: resourceRef.group,
+        kind: resourceRef.kind,
+        version: resourceRef.version,
+        follow: false,
+        tailLines: 100
+      },
+      (chunk) => logs.push(chunk)
     );
     return logs;
   }
@@ -86,6 +116,10 @@ export class ArgoCDClient {
     const logs: LogEntry[] = [];
     await this.client.getStream<LogEntry>(
       `/api/v1/applications/${applicationName}/pods/${podName}/logs`,
+      {
+        follow: false,
+        tailLines: 100
+      },
       (chunk) => logs.push(chunk)
     );
     return logs;
@@ -106,7 +140,13 @@ export class ArgoCDClient {
     resourceName: string
   ) {
     const { body } = await this.client.get<EventList>(
-      `/api/v1/applications/${applicationName}/events?appNamespace=${applicationNamespace}&resourceUID=${resourceUID}&resourceNamespace=${resourceNamespace}&resourceName=${resourceName}`
+      `/api/v1/applications/${applicationName}/events`,
+      {
+        appNamespace: applicationNamespace,
+        resourceNamespace,
+        resourceUID,
+        resourceName
+      }
     );
     return body;
   }
@@ -117,7 +157,15 @@ export class ArgoCDClient {
     resourceRef: ResourceRef
   ) {
     const { body } = await this.client.get<{ actions: ResourceAction[] }>(
-      `/api/v1/applications/${applicationName}/resource/actions?appNamespace=${applicationNamespace}&namespace=${resourceRef.namespace}&group=${resourceRef.group}&kind=${resourceRef.kind}&resourceName=${resourceRef.name}&version=`
+      `/api/v1/applications/${applicationName}/resource/actions`,
+      {
+        appNamespace: applicationNamespace,
+        namespace: resourceRef.namespace,
+        resourceName: resourceRef.name,
+        group: resourceRef.group,
+        kind: resourceRef.kind,
+        version: resourceRef.version
+      }
     );
     return body;
   }
@@ -129,7 +177,15 @@ export class ArgoCDClient {
     action: string
   ) {
     const { body } = await this.client.post<string, Application>(
-      `/api/v1/applications/${applicationName}/resource/actions?appNamespace=${applicationNamespace}&namespace=${resourceRef.namespace}&group=${resourceRef.group}&kind=${resourceRef.kind}&resourceName=${resourceRef.name}&version=`,
+      `/api/v1/applications/${applicationName}/resource/actions`,
+      {
+        appNamespace: applicationNamespace,
+        namespace: resourceRef.namespace,
+        resourceName: resourceRef.name,
+        group: resourceRef.group,
+        kind: resourceRef.kind,
+        version: resourceRef.version
+      },
       action
     );
     return body;
