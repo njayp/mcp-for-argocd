@@ -3,7 +3,7 @@ import { McpServer, ToolCallback } from '@modelcontextprotocol/sdk/server/mcp.js
 import packageJSON from '../../package.json' with { type: 'json' };
 import { ArgoCDClient } from '../argocd/client.js';
 import { z, ZodRawShape } from 'zod';
-import { Application, ResourceRef } from '../shared/models/models.js';
+import { V1alpha1Application, V1alpha1ResourceResult } from '../types/argocd-types.js';
 import {
   ApplicationNamespaceSchema,
   ApplicationSchema,
@@ -29,9 +29,10 @@ export class Server extends McpServer {
       'list_applications',
       'list_applications returns list of applications',
       {
-        search: z.string().describe('Search applications by name, optional')
+        search: z.string().nullish().describe('Search applications by name, optional')
       },
-      async ({ search }) => await this.argocdClient.listApplications({ search })
+      async ({ search }) =>
+        await this.argocdClient.listApplications({ search: search ?? undefined })
     );
     this.addJsonOutputTool(
       'get_application',
@@ -44,14 +45,17 @@ export class Server extends McpServer {
       'create_application creates application',
       { application: ApplicationSchema },
       async ({ application }) =>
-        await this.argocdClient.createApplication(application as Application)
+        await this.argocdClient.createApplication(application as V1alpha1Application)
     );
     this.addJsonOutputTool(
       'update_application',
       'update_application updates application',
       { applicationName: z.string(), application: ApplicationSchema },
       async ({ applicationName, application }) =>
-        await this.argocdClient.updateApplication(applicationName, application as Application)
+        await this.argocdClient.updateApplication(
+          applicationName,
+          application as V1alpha1Application
+        )
     );
     this.addJsonOutputTool(
       'delete_application',
@@ -91,7 +95,7 @@ export class Server extends McpServer {
         await this.argocdClient.getWorkloadLogs(
           applicationName,
           applicationNamespace,
-          resourceRef as ResourceRef
+          resourceRef as V1alpha1ResourceResult
         )
     );
     this.addJsonOutputTool(
@@ -137,7 +141,7 @@ export class Server extends McpServer {
         await this.argocdClient.getResourceActions(
           applicationName,
           applicationNamespace,
-          resourceRef as ResourceRef
+          resourceRef as V1alpha1ResourceResult
         )
     );
     this.addJsonOutputTool(
@@ -153,7 +157,7 @@ export class Server extends McpServer {
         await this.argocdClient.runResourceAction(
           applicationName,
           applicationNamespace,
-          resourceRef as ResourceRef,
+          resourceRef as V1alpha1ResourceResult,
           action
         )
     );
