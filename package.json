@@ -36,7 +36,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "dev": "tsx watch src/index.ts sse",
+    "dev": "tsx watch src/index.ts http",
+    "dev-sse": "tsx watch src/index.ts sse",
     "lint": "eslint src/**/*.ts --no-warn-ignored",
     "lint:fix": "eslint src/**/*.ts --fix",
     "build": "tsup",
