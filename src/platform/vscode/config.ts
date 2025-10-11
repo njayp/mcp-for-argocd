@@ -9,8 +9,10 @@ interface VSCodeServerConfig {
   env?: Record<string, string>;
 }
 
+const serversKey = 'servers';
+
 interface VSCodeConfig extends MCPConfig {
-  servers: Record<string, VSCodeServerConfig>;
+  [serversKey]: Record<string, VSCodeServerConfig>;
 }
 
 export class VSCodeConfigManager extends ConfigManager<VSCodeConfig, VSCodeServerConfig> {
@@ -40,7 +42,7 @@ export class VSCodeConfigManager extends ConfigManager<VSCodeConfig, VSCodeServe
   }
 
   protected getServersKey() {
-    return 'servers';
+    return serversKey;
   }
 
   protected createServerConfig(baseUrl?: URL, apiToken?: string): VSCodeServerConfig {

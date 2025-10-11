@@ -8,8 +8,10 @@ interface ClaudeServerConfig {
   env?: Record<string, string>;
 }
 
+const serversKey = 'mcpServers';
+
 interface ClaudeConfig extends MCPConfig {
-  mcpServers: Record<string, ClaudeServerConfig>;
+  [serversKey]: Record<string, ClaudeServerConfig>;
 }
 
 export class ClaudeConfigManager extends ConfigManager<ClaudeConfig, ClaudeServerConfig> {
@@ -40,7 +42,7 @@ export class ClaudeConfigManager extends ConfigManager<ClaudeConfig, ClaudeServe
   }
 
   protected getServersKey() {
-    return 'mcpServers';
+    return serversKey;
   }
 
   protected createServerConfig(baseUrl?: URL, apiToken?: string): ClaudeServerConfig {
