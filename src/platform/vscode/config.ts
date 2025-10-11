@@ -9,6 +9,7 @@ interface VSCodeServerConfig {
   env?: Record<string, string>;
 }
 
+// VSCode-specific key
 const serversKey = 'servers';
 
 interface VSCodeConfig extends MCPConfig {

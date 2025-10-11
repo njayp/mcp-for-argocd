@@ -8,6 +8,7 @@ interface ClaudeServerConfig {
   env?: Record<string, string>;
 }
 
+// Claude-specific key
 const serversKey = 'mcpServers';
 
 interface ClaudeConfig extends MCPConfig {
