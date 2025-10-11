@@ -68,13 +68,16 @@ export const cmd = () => {
         async ({ url, token }) => {
           const manager = new ClaudeConfigManager();
           try {
-            const wasEnabled = await manager.enable(url, token);
-            if (wasEnabled) {
+            const result = await manager.enable(url, token);
+            if (result.wasEnabled) {
               console.log('✓ ArgoCD MCP server configuration updated in Claude Desktop');
             } else {
               console.log('✓ ArgoCD MCP server enabled in Claude Desktop');
             }
             console.log(`Configuration file: ${manager.getConfigPath()}`);
+            if (result.backupPath) {
+              console.log(`Backup created: ${result.backupPath}`);
+            }
           } catch (error) {
             console.error('Failed to enable ArgoCD MCP server:', error);
             process.exit(1);
@@ -88,13 +91,16 @@ export const cmd = () => {
         async () => {
           const manager = new ClaudeConfigManager();
           try {
-            const wasEnabled = await manager.disable();
-            if (wasEnabled) {
+            const result = await manager.disable();
+            if (result.wasEnabled) {
               console.log('✓ ArgoCD MCP server disabled in Claude Desktop');
             } else {
               console.log('ArgoCD MCP server was not enabled');
             }
             console.log(`Configuration file: ${manager.getConfigPath()}`);
+            if (result.backupPath) {
+              console.log(`Backup created: ${result.backupPath}`);
+            }
           } catch (error) {
             console.error('Failed to disable ArgoCD MCP server:', error);
             process.exit(1);
@@ -129,13 +135,16 @@ export const cmd = () => {
         async ({ workspace, url, token }) => {
           const manager = new VSCodeConfigManager(workspace);
           try {
-            const wasEnabled = await manager.enable(url, token);
-            if (wasEnabled) {
+            const result = await manager.enable(url, token);
+            if (result.wasEnabled) {
               console.log('✓ ArgoCD MCP server configuration updated in VS Code');
             } else {
               console.log('✓ ArgoCD MCP server enabled in VS Code');
             }
             console.log(`Configuration file: ${manager.getConfigPath()}`);
+            if (result.backupPath) {
+              console.log(`Backup created: ${result.backupPath}`);
+            }
           } catch (error) {
             console.error('Failed to enable ArgoCD MCP server:', error);
             process.exit(1);
@@ -154,13 +163,16 @@ export const cmd = () => {
         async ({ workspace }) => {
           const manager = new VSCodeConfigManager(workspace);
           try {
-            const wasEnabled = await manager.disable();
-            if (wasEnabled) {
+            const result = await manager.disable();
+            if (result.wasEnabled) {
               console.log('✓ ArgoCD MCP server disabled in VS Code');
             } else {
               console.log('ArgoCD MCP server was not enabled');
             }
             console.log(`Configuration file: ${manager.getConfigPath()}`);
+            if (result.backupPath) {
+              console.log(`Backup created: ${result.backupPath}`);
+            }
           } catch (error) {
             console.error('Failed to disable ArgoCD MCP server:', error);
             process.exit(1);

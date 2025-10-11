@@ -1,5 +1,5 @@
-import { readFile, writeFile, mkdir } from 'fs/promises';
-import { dirname } from 'path';
+import { readFile, writeFile, mkdir, copyFile, stat } from 'fs/promises';
+import { dirname, join } from 'path';
 
 /**
  * Base interface that all MCP config formats must implement.
@@ -7,6 +7,11 @@ import { dirname } from 'path';
  */
 export interface MCPConfig {
   [serversKey: string]: Record<string, unknown>;
+}
+
+export interface ConfigChangeResult {
+  wasEnabled: boolean;
+  backupPath?: string | null;
 }
 
 /**
@@ -56,19 +61,43 @@ export abstract class ConfigManager<T extends MCPConfig, S = unknown> {
     }
   }
 
-  async writeConfig(config: T): Promise<void> {
+  /**
+   * Create a backup of the config file with timestamp
+   * @returns the path to the backup file, or null if no backup was created
+   */
+  async createBackup(): Promise<string | null> {
+    try {
+      await stat(this.configPath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        return null;
+      }
+      throw error;
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const dir = dirname(this.configPath);
+    const backupPath = join(dir, `mcp.backup.${timestamp}.json`);
+
+    await copyFile(this.configPath, backupPath);
+    return backupPath;
+  }
+
+  async writeConfig(config: T): Promise<string | null> {
     const dir = dirname(this.configPath);
     await mkdir(dir, { recursive: true });
+    const backupPath = await this.createBackup();
     await writeFile(this.configPath, JSON.stringify(config, null, 2), 'utf-8');
+    return backupPath;
   }
 
   /**
    * Enable the server configuration.
    * @param baseUrl - Optional ArgoCD base URL
    * @param apiToken - Optional ArgoCD API token
-   * @returns true if the server was already enabled, false if it was newly enabled
+   * @returns ConfigChangeResult with wasEnabled flag and backup path
    */
-  async enable(baseUrl?: URL, apiToken?: string): Promise<boolean> {
+  async enable(baseUrl?: URL, apiToken?: string): Promise<ConfigChangeResult> {
     const config = await this.readConfig();
     const serversKey = this.getServersKey();
 
@@ -80,21 +109,20 @@ export abstract class ConfigManager<T extends MCPConfig, S = unknown> {
     const wasEnabled = this.serverName in servers;
     const serverConfig = this.createServerConfig(baseUrl, apiToken);
     servers[this.serverName] = serverConfig;
-    await this.writeConfig(config);
-    return wasEnabled;
+    const backupPath = await this.writeConfig(config);
+    return { wasEnabled, backupPath };
   }
 
   /**
    * Disable the server configuration.
-   * @returns true if the server was enabled and has been disabled, false if it was not enabled
+   * @returns ConfigChangeResult with wasEnabled flag and backup path
    */
-  async disable(): Promise<boolean> {
+  async disable(): Promise<ConfigChangeResult> {
     const config = await this.readConfig();
     const serversKey = this.getServersKey();
 
     if (!config[serversKey]) {
-      // Nothing to disable if servers key doesn't exist
-      return false;
+      return { wasEnabled: false };
     }
 
     const servers = config[serversKey] as Record<string, S>;
@@ -102,10 +130,11 @@ export abstract class ConfigManager<T extends MCPConfig, S = unknown> {
 
     if (wasEnabled) {
       delete servers[this.serverName];
-      await this.writeConfig(config);
+      const backupPath = await this.writeConfig(config);
+      return { wasEnabled, backupPath };
     }
 
-    return wasEnabled;
+    return { wasEnabled, backupPath };
   }
 
   getConfigPath(): string {
