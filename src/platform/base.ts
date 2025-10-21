@@ -1,5 +1,5 @@
-import { readFile, writeFile, mkdir } from 'fs/promises';
-import { dirname } from 'path';
+import { readFile, writeFile, mkdir, copyFile, stat } from 'fs/promises';
+import { dirname, join } from 'path';
 
 /**
  * Base interface that all MCP config formats must implement.
@@ -92,8 +92,26 @@ export abstract class ConfigManager<T extends MCPConfig, S = unknown> {
     const wasEnabled = this.serverName in servers;
     const serverConfig = this.createServerConfig(baseUrl, apiToken);
     servers[this.serverName] = serverConfig;
+    await this.createBackup();
     await this.writeConfig(config);
     return wasEnabled;
+  }
+
+  async createBackup(): Promise<void> {
+    try {
+      await stat(this.configPath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        return;
+      }
+      throw error;
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const dir = dirname(this.configPath);
+    const backupPath = join(dir, `mcp.backup.${timestamp}.json`);
+
+    await copyFile(this.configPath, backupPath);
   }
 
   /**
