@@ -86,50 +86,37 @@ The server provides the following ArgoCD management tools:
 
 ### Usage with VSCode
 
-1. Follow the [Use MCP servers in VS Code documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers), and create a `.vscode/mcp.json` file in your project:
-```json
-{
-  "servers": {
-    "argocd-mcp-stdio": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "argocd-mcp@latest",
-        "stdio"
-      ],
-      "env": {
-        "ARGOCD_BASE_URL": "<argocd_url>",
-        "ARGOCD_API_TOKEN": "<argocd_token>"
-      }
-    }
-  }
-}
+1. Enable the ArgoCD MCP server in VS Code:
+```bash
+npx argocd-mcp@latest vscode enable --url <argocd_url> --token <argocd_token>
 ```
+
+Optionally, use the `--workspace` flag to install in the current workspace directory instead of the user configuration directory.
+
+You can also set the `ARGOCD_BASE_URL` and `ARGOCD_API_TOKEN` environment variables instead of using the `--url` and `--token` flags.
 
 2. Start a conversation with an AI assistant in VS Code that supports MCP.
 
-### Usage with Claude Desktop
-
-1. Follow the [MCP in Claude Desktop documentation](https://modelcontextprotocol.io/quickstart/user), and create a `claude_desktop_config.json` configuration file:
-```json
-{
-  "mcpServers": {
-    "argocd-mcp": {
-      "command": "npx",
-      "args": [
-        "argocd-mcp@latest",
-        "stdio"
-      ],
-      "env": {
-        "ARGOCD_BASE_URL": "<argocd_url>",
-        "ARGOCD_API_TOKEN": "<argocd_token>"
-      }
-    }
-  }
-}
+To disable the server, run:
+```bash
+npx argocd-mcp@latest vscode disable
 ```
 
-2. Configure Claude Desktop to use this configuration file in settings.
+### Usage with Claude Desktop
+
+1. Enable the ArgoCD MCP server in Claude Desktop:
+```bash
+npx argocd-mcp@latest claude enable --url <argocd_url> --token <argocd_token>
+```
+
+You can also set the `ARGOCD_BASE_URL` and `ARGOCD_API_TOKEN` environment variables instead of using the `--url` and `--token` flags.
+
+2. Restart Claude Desktop to load the configuration.
+
+To disable the server, run:
+```bash
+npx argocd-mcp@latest claude disable
+```
 
 ### Self-signed Certificates
 
