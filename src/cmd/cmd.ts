@@ -7,6 +7,7 @@ import {
 } from '../server/transport.js';
 import { ClaudeConfigManager } from '../platform/claude/config.js';
 import { VSCodeConfigManager } from '../platform/vscode/config.js';
+import { CursorConfigManager } from '../platform/cursor/config.js';
 
 export const cmd = () => {
   const exe = yargs(hideBin(process.argv));
@@ -118,6 +119,69 @@ export const cmd = () => {
             const wasEnabled = await manager.disable();
             if (wasEnabled) {
               console.log('✓ ArgoCD MCP server disabled in Claude Desktop');
+            } else {
+              console.log('ArgoCD MCP server was not enabled');
+            }
+          } catch (error) {
+            console.error('Failed to disable ArgoCD MCP server:', (error as Error).message);
+            process.exit(1);
+          }
+        }
+      );
+  });
+
+  exe.command('cursor', 'Manage Cursor integration', (yargs) => {
+    return yargs
+      .command(
+        'enable',
+        'Enable ArgoCD MCP server in Cursor',
+        (yargs) => {
+          return yargs
+            .option('workspace', {
+              type: 'boolean',
+              description: 'Install in current workspace directory'
+            })
+            .option('url', {
+              type: 'string',
+              description: 'ArgoCD base URL (falls back to ARGOCD_BASE_URL env var)'
+            })
+            .option('token', {
+              type: 'string',
+              description: 'ArgoCD API token (falls back to ARGOCD_API_TOKEN env var)'
+            });
+        },
+        async ({ workspace, url, token }) => {
+          const manager = new CursorConfigManager(workspace);
+          try {
+            console.log(`Configuration file: ${manager.getConfigPath()}`);
+            const wasEnabled = await manager.enable(validateUrl(url), validateToken(token));
+            if (wasEnabled) {
+              console.log('✓ ArgoCD MCP server configuration updated in Cursor');
+            } else {
+              console.log('✓ ArgoCD MCP server enabled in Cursor');
+            }
+          } catch (error) {
+            console.error('Failed to enable ArgoCD MCP server:', (error as Error).message);
+            process.exit(1);
+          }
+        }
+      )
+      .command(
+        'disable',
+        'Disable ArgoCD MCP server in Cursor',
+        (yargs) => {
+          return yargs.option('workspace', {
+            type: 'boolean',
+            description: 'Install in current workspace directory'
+          });
+        },
+        async ({ workspace }) => {
+          const manager = new CursorConfigManager(workspace);
+          try {
+            console.log(`Configuration file: ${manager.getConfigPath()}`);
+            const wasEnabled = await manager.disable();
+            if (wasEnabled) {
+              console.log('✓ ArgoCD MCP server disabled in Cursor');
             } else {
               console.log('ArgoCD MCP server was not enabled');
             }
